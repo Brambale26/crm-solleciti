@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 
-const SCRIPT_URL = "https://script.google.com/macros/s/PLACEHOLDER_URL/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxM-HnsnxAehTsVTp_YxmVOKb4xuVAMSc33wzRH0mVhRclFkRrxG7-vxIDb7SQiLgg/exec";
 
 const STATI_OP = ["CONTROLLA", "AGENTE", "AGENZIA", "L/L", "RICHIAMA", "PAGATO"];
 const PRIORITA = ["ALTA", "MEDIA", "BASSA"];
