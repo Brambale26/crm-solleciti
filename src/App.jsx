@@ -78,10 +78,23 @@ async function parseSpaccatureExcel(file) {
     reader.onload = (e) => {
       try {
         const XLSX = window.XLSX;
-        const wb = XLSX.read(e.target.result, { type: "array" });
+        const wb = XLSX.read(e.target.result, { type: "array", cellDates: true });
+        // Prende il primo foglio utile (SCADUTO o simile)
         const sheetName = wb.SheetNames.find(s => s.toUpperCase().includes("SCADUT") || s.toUpperCase().includes("SPACCATURE")) || wb.SheetNames[0];
         const ws = wb.Sheets[sheetName];
-        resolve(XLSX.utils.sheet_to_json(ws, { defval: "" }));
+        // Leggi le righe come array per gestire l'intestazione data
+        const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        if (raw.length < 2) { resolve([]); return; }
+        const headers = raw[0];
+        // Trova l'indice della colonna scadenza (quella con una data nell'intestazione)
+        const scadenzaIdx = headers.findIndex(h => h instanceof Date || (typeof h === "string" && /\d{2}\/\d{2}\/\d{4}/.test(h)));
+        const rows = raw.slice(1).map(row => {
+          const obj = {};
+          headers.forEach((h, i) => { obj[String(h)] = row[i]; });
+          if (scadenzaIdx >= 0) obj["__SCADENZA__"] = row[scadenzaIdx];
+          return obj;
+        });
+        resolve(rows);
       } catch (err) { reject(err); }
     };
     reader.readAsArrayBuffer(file);
@@ -91,15 +104,23 @@ async function parseSpaccatureExcel(file) {
 function elaboraSpaccature(rows) {
   const clientiMap = {};
   rows.forEach(row => {
-    const cod = String(row["COD."] || row["CODICE"] || row["CODICE_STD"] || "").trim().padStart(5, "0");
+    const cod = String(row["COD."] || row["CODICE"] || "").trim().padStart(5, "0");
     if (!cod || cod === "00000") return;
     const ragione = String(row["RAGIONE SOCIALE"] || row["RAGIONE_SOCIALE"] || "").trim();
     const agente = String(row["AGENTE"] || "").trim();
     const localita = String(row["LOCALITA'"] || row["LOCALITA"] || "").trim();
     const prov = String(row["PROV."] || row["PROV"] || "").trim();
     const doc = String(row["DOC."] || row["DOC"] || "").trim();
-    const scadenzaRaw = row["SCADENZE"] || row["SCADENZA"] || "";
-    const scadenza = parseExcelDate(typeof scadenzaRaw === "number" && scadenzaRaw > 40000 ? scadenzaRaw : null) || String(scadenzaRaw);
+    // Scadenza: usa la colonna trovata dinamicamente o la colonna __SCADENZA__
+    const scadenzaRaw = row["__SCADENZA__"] || row["SCADENZE"] || row["SCADENZA"] || "";
+    let scadenza = "";
+    if (scadenzaRaw instanceof Date) {
+      scadenza = scadenzaRaw.toISOString().slice(0, 10);
+    } else if (typeof scadenzaRaw === "number" && scadenzaRaw > 40000) {
+      scadenza = new Date((scadenzaRaw - 25569) * 86400000).toISOString().slice(0, 10);
+    } else {
+      scadenza = String(scadenzaRaw);
+    }
     const importo = parseFloat(row["IMPORTO"] || 0);
     const giorni = parseInt(row["GIORNI"] || 0);
     const tag = `${cod}|${doc}|${scadenza}|${importo.toFixed(2)}`;
