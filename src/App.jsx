@@ -266,9 +266,16 @@ export default function App() {
       const nuovi = elaboraSpaccature(rows);
       setData(d => {
         const clientiMerged = mergeClienti(d.clienti || [], nuovi);
-        const nd = { ...d, clienti: clientiMerged };
+        // Auto-crea agenti mancanti
+        const agentiEsistenti = d.agenti || [];
+        const nomiAgentiNuovi = [...new Set(nuovi.map(c => c.agente).filter(Boolean))];
+        const agentiDaAggiungere = nomiAgentiNuovi
+          .filter(nome => !agentiEsistenti.find(a => a.nome === nome))
+          .map(nome => ({ id: Date.now() + Math.random(), nome, email: "", telefono: "", zona: "" }));
+        const agentiMerged = [...agentiEsistenti, ...agentiDaAggiungere];
+        const nd = { ...d, clienti: clientiMerged, agenti: agentiMerged };
         syncToCloud(nd);
-        showToast(`Importate ${nuovi.length} posizioni · ${clientiMerged.length} clienti totali`);
+        showToast(`${clientiMerged.length} clienti · ${agentiDaAggiungere.length} nuovi agenti creati`);
         return nd;
       });
     } catch (e) { showToast("Errore: " + e.message, "warn"); }
@@ -288,11 +295,20 @@ export default function App() {
   }
 
   function addIncasso(inc) {
-    setData(d => { const nd = { ...d, incassi: [{ ...inc, id: Date.now(), dataRicezione: oggi(), stato: "IN MANO AGENTE" }, ...(d.incassi || [])] }; showToast("Incasso registrato"); syncToCloud(nd); return nd; });
+    const statoBonifico = inc.tipo === "Bonifico" ? "REGISTRATO" : "IN MANO AGENTE";
+    setData(d => {
+      const nd = { ...d, incassi: [{ ...inc, id: Date.now(), dataRicezione: oggi(), dataRegistrazione: inc.tipo === "Bonifico" ? oggi() : null, stato: statoBonifico }, ...(d.incassi || [])] };
+      showToast(inc.tipo === "Bonifico" ? "Bonifico registrato come pagato" : "Incasso registrato");
+      syncToCloud(nd); return nd;
+    });
   }
 
   function updateIncasso(id, updates) {
     setData(d => { const nd = { ...d, incassi: d.incassi.map(i => i.id === id ? { ...i, ...updates } : i) }; syncToCloud(nd); return nd; });
+  }
+
+  function deleteIncasso(id) {
+    setData(d => { const nd = { ...d, incassi: d.incassi.filter(i => i.id !== id) }; showToast("Incasso eliminato"); syncToCloud(nd); return nd; });
   }
 
   function addAgente(agente) {
@@ -360,10 +376,10 @@ export default function App() {
   }
 
   if (agenteSelezionato) {
-    const ag = data.agenti.find(a => a.id === agenteSelezionato);
+    const ag = data.agenti.find(a => a.id === agenteSelezionato) || data.agenti.find(a => a.nome === agenteSelezionato) || { id: null, nome: agenteSelezionato, email: "", telefono: "", zona: "" };
     const clientiAgente = (data.clienti || []).filter(c => c.agente === ag?.nome);
     const incassiAgente = (data.incassi || []).filter(i => i.agente === ag?.nome && i.stato === "IN MANO AGENTE");
-    if (ag) return <SchedaAgente agente={ag} clienti={clientiAgente} incassi={incassiAgente} onBack={() => setAgenteSelezionato(null)} onUpdate={u => updateAgente(ag.id, u)} onAddDiario={(clienteId, voce) => addDiario(clienteId, voce)} onUpdateCliente={updateCliente} onUpdateIncasso={updateIncasso} onSelectCliente={id => { setAgenteSelezionato(null); setClienteSelezionato(id); }} showToast={showToast} />;
+    if (ag) return <SchedaAgente agente={ag} clienti={clientiAgente} incassi={incassiAgente} onBack={() => setAgenteSelezionato(null)} onUpdate={u => updateAgente(ag.id, u)} onAddDiario={(clienteId, voce) => addDiario(clienteId, voce)} onUpdateCliente={updateCliente} onUpdateIncasso={updateIncasso} onDeleteIncasso={deleteIncasso} onSelectCliente={id => { setAgenteSelezionato(null); setClienteSelezionato(id); }} showToast={showToast} />;
   }
 
   return (
@@ -450,7 +466,7 @@ export default function App() {
             {page === "clienti" && <Clienti clienti={data.clienti || []} onSelectCliente={setClienteSelezionato} onImporta={importaSpaccature} showToast={showToast} />}
             {page === "agenti" && <Agenti agenti={data.agenti || []} clienti={data.clienti || []} incassi={data.incassi || []} onAddAgente={addAgente} onSelectAgente={setAgenteSelezionato} />}
             {page === "ll" && <PraticheLl pratiche={data.praticheLl || []} clienti={data.clienti || []} onUpdate={updateLL} onSelectCliente={setClienteSelezionato} showToast={showToast} />}
-            {page === "incassi" && <Incassi incassi={data.incassi || []} clienti={data.clienti || []} onAdd={addIncasso} onUpdate={updateIncasso} onSelectCliente={setClienteSelezionato} showToast={showToast} />}
+            {page === "incassi" && <Incassi incassi={data.incassi || []} clienti={data.clienti || []} onAdd={addIncasso} onUpdate={updateIncasso} onDelete={deleteIncasso} onSelectCliente={setClienteSelezionato} showToast={showToast} />}
             {page === "dashboard" && <Dashboard kpi={kpi} clienti={data.clienti || []} praticheLl={data.praticheLl || []} incassi={data.incassi || []} agenti={data.agenti || []} insoluti={data.insoluti || []} onSelectAgente={setAgenteSelezionato} />}
           </>
         )}
@@ -951,7 +967,7 @@ function Agenti({ agenti, clienti, incassi, onAddAgente, onSelectAgente }) {
         const hasAlert = incassiAg.some(i => giorniDa(i.dataRicezione) > 15);
 
         return (
-          <div key={nomeAg} className="cl-card" onClick={() => ag && onSelectAgente(ag.id)} style={{ borderColor: hasAlert ? "#3a2e08" : "#1e1e2a" }}>
+          <div key={nomeAg} className="cl-card" onClick={() => { if (ag) onSelectAgente(ag.id); else onSelectAgente(nomeAg); }} style={{ borderColor: hasAlert ? "#3a2e08" : "#1e1e2a" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15 }}>{nomeAg}</div>
@@ -979,12 +995,15 @@ function SchedaAgente({ agente, clienti, incassi, onBack, onUpdate, onAddDiario,
   const [tab, setTab] = useState("clienti");
   const [tracking, setTracking] = useState({});
 
-  // Clienti ordinati: AGENTE in cima, poi per scaduto
+  const [sortStato, setSortStato] = useState("AGENTE");
+  // Clienti ordinati: stato selezionato in cima, poi per scaduto
   const clientiOrdinati = useMemo(() => [...clienti].sort((a, b) => {
-    if (a.statoOp === "AGENTE" && b.statoOp !== "AGENTE") return -1;
-    if (b.statoOp === "AGENTE" && a.statoOp !== "AGENTE") return 1;
+    if (sortStato !== "TUTTI") {
+      if (a.statoOp === sortStato && b.statoOp !== sortStato) return -1;
+      if (b.statoOp === sortStato && a.statoOp !== sortStato) return 1;
+    }
     return (b.totaleScaduto || 0) - (a.totaleScaduto || 0);
-  }), [clienti]);
+  }), [clienti, sortStato]);
 
   const totScaduto = clienti.reduce((s, c) => s + (c.totaleScaduto || 0), 0);
   const totMano = incassi.reduce((s, i) => s + (i.incassoNetto || i.importo || 0), 0);
@@ -1023,6 +1042,11 @@ function SchedaAgente({ agente, clienti, incassi, onBack, onUpdate, onAddDiario,
 
         {tab === "clienti" && (
           <div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
+              {["TUTTI", "AGENTE", "PROBLEMA", "CONTROLLA", "L/L", "AGENZIA", "RICHIAMA"].map(s => (
+                <button key={s} onClick={() => setSortStato(s)} style={{ padding: "6px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: sortStato === s ? "#4a7fd4" : "transparent", color: sortStato === s ? "#fff" : "#5a5868", border: sortStato === s ? "none" : "1px solid #2a2a38" }}>{s}</button>
+              ))}
+            </div>
             {clientiOrdinati.map(c => (
               <ClienteAgente key={c.id} cliente={c} onApriScheda={() => onSelectCliente(c.id)} onAnnota={(testo, richiamo) => registraContattoSuCliente(c.id, testo, richiamo)} showToast={showToast} />
             ))}
@@ -1052,6 +1076,7 @@ function SchedaAgente({ agente, clienti, incassi, onBack, onUpdate, onAddDiario,
                     <input value={tracking[i.id] || ""} onChange={e => setTracking(t => ({ ...t, [i.id]: e.target.value }))} placeholder="Tracking spedizione..." style={{ flex: 1, fontSize: 13, padding: "8px 10px" }} />
                     <button className="btn-green" style={{ fontSize: 13, padding: "8px 14px" }} onClick={() => { onUpdateIncasso(i.id, { stato: "SPEDITO", dataSpedizione: oggi(), tracking: tracking[i.id] || "" }); showToast("Spedizione registrata"); }}>Spedito</button>
                   </div>
+                  <button onClick={() => { onDeleteIncasso && onDeleteIncasso(i.id); showToast("Incasso eliminato"); }} style={{ marginTop: 8, background: "transparent", color: "#e24b4a", border: "1px solid #3a2020", borderRadius: 8, padding: "4px 12px", fontSize: 12, cursor: "pointer", width: "100%" }}>✕ Elimina</button>
                 </div>
               );
             })}
@@ -1179,7 +1204,7 @@ function PraticheLl({ pratiche, clienti, onUpdate, onSelectCliente, showToast })
 }
 
 /* ─── INCASSI ─── */
-function Incassi({ incassi, clienti, onAdd, onUpdate, onSelectCliente, showToast }) {
+function Incassi({ incassi, clienti, onAdd, onUpdate, onDelete, onSelectCliente, showToast }) {
   const [tab, setTab] = useState("mano");
   const inMano = incassi.filter(i => i.stato === "IN MANO AGENTE");
   const spediti = incassi.filter(i => i.stato === "SPEDITO");
@@ -1223,6 +1248,7 @@ function Incassi({ incassi, clienti, onAdd, onUpdate, onSelectCliente, showToast
           </div>
         )}
         {inc.stato === "REGISTRATO" && <div style={{ fontSize: 12, color: "#1D9E75" }}>✓ Registrato {fmtData(inc.dataRegistrazione)}</div>}
+        <button onClick={() => onDelete(inc.id)} style={{ marginTop: 8, background: "transparent", color: "#e24b4a", border: "1px solid #3a2020", borderRadius: 8, padding: "4px 12px", fontSize: 12, cursor: "pointer", width: "100%" }}>✕ Elimina incasso</button>
       </div>
     );
   };
