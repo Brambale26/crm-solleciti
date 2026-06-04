@@ -273,7 +273,9 @@ export default function App() {
           .filter(nome => !agentiEsistenti.find(a => a.nome === nome))
           .map(nome => ({ id: Date.now() + Math.random(), nome, email: "", telefono: "", zona: "" }));
         const agentiMerged = [...agentiEsistenti, ...agentiDaAggiungere];
-        const nd = { ...d, clienti: clientiMerged, agenti: agentiMerged };
+        const totaleScadutoImport = clientiMerged.filter(c => c.statoCl !== "PAGATO").reduce((s, c) => s + (c.totaleScaduto || 0), 0);
+        const dataImport = oggi();
+        const nd = { ...d, clienti: clientiMerged, agenti: agentiMerged, ultimoImport: { data: dataImport, scaduto: totaleScadutoImport } };
         syncToCloud(nd);
         showToast(`${clientiMerged.length} clienti · ${agentiDaAggiungere.length} nuovi agenti creati`);
         return nd;
@@ -353,13 +355,43 @@ export default function App() {
 
   const kpi = useMemo(() => {
     const clienti = data.clienti || [];
+    const incassi = data.incassi || [];
+    const meseCorrente = oggi().slice(0, 7); // "YYYY-MM"
+
     const totScaduto = clienti.filter(c => c.statoCl !== "PAGATO").reduce((s, c) => s + (c.totaleScaduto || 0), 0);
+    const scadutoMese = data.ultimoImport?.scaduto || totScaduto;
+
+    // Incassato confermato (REGISTRATO)
+    const incassatoConfermatoTot = incassi.filter(i => i.stato === "REGISTRATO").reduce((s, i) => s + (i.incassoNetto || i.importo || 0), 0);
+    const incassatoConfermatoMese = incassi.filter(i => i.stato === "REGISTRATO" && (i.dataRegistrazione || "").startsWith(meseCorrente)).reduce((s, i) => s + (i.incassoNetto || i.importo || 0), 0);
+
+    // Incassato atteso (IN MANO AGENTE + SPEDITO)
+    const incassatoAtteso = incassi.filter(i => i.stato === "IN MANO AGENTE" || i.stato === "SPEDITO").reduce((s, i) => s + (i.incassoNetto || i.importo || 0), 0);
+    const incassatoAttesoMese = incassi.filter(i => (i.stato === "IN MANO AGENTE" || i.stato === "SPEDITO") && (i.dataRicezione || "").startsWith(meseCorrente)).reduce((s, i) => s + (i.incassoNetto || i.importo || 0), 0);
+
+    // Totale incassato
+    const incassatoTotale = incassatoConfermatoTot + incassatoAtteso;
+    const incassatoTotaleMese = incassatoConfermatoMese + incassatoAttesoMese;
+
+    // Percentuali
+    const pctConfermatoTot = totScaduto > 0 ? (incassatoConfermatoTot / totScaduto) * 100 : 0;
+    const pctTotaleMese = scadutoMese > 0 ? (incassatoTotaleMese / scadutoMese) * 100 : 0;
+
     const llAperte = (data.praticheLl || []).filter(p => p.stato !== "AGENZIA" && p.stato !== "CHIUSA").length;
-    const titoliMano = (data.incassi || []).filter(i => i.stato === "IN MANO AGENTE").length;
+    const titoliMano = incassi.filter(i => i.stato === "IN MANO AGENTE").length;
     const daRichiamare = listaOggi.filter(c => c.dataRichiamo === oggi()).length;
     const insoluti = (data.insoluti || []).filter(i => i.stato === "APERTO").length;
-    return { totScaduto, llAperte, titoliMano, daRichiamare, insoluti };
-  }, [data.clienti, data.praticheLl, data.incassi, data.insoluti, listaOggi]);
+
+    return {
+      totScaduto, scadutoMese,
+      incassatoConfermatoTot, incassatoConfermatoMese,
+      incassatoAtteso, incassatoAttesoMese,
+      incassatoTotale, incassatoTotaleMese,
+      pctConfermatoTot, pctTotaleMese,
+      llAperte, titoliMano, daRichiamare, insoluti,
+      dataUltimoImport: data.ultimoImport?.data || null
+    };
+  }, [data.clienti, data.praticheLl, data.incassi, data.insoluti, data.ultimoImport, listaOggi]);
 
   const NAV = [
     { id: "oggi", label: "Oggi", icon: "ti-calendar-event" },
@@ -372,14 +404,14 @@ export default function App() {
 
   if (clienteSelezionato) {
     const cl = data.clienti.find(c => c.id === clienteSelezionato);
-    if (cl) return <SchedaCliente cliente={cl} agenti={data.agenti || []} onBack={() => setClienteSelezionato(null)} onUpdate={u => updateCliente(cl.id, u)} onAddDiario={v => addDiario(cl.id, v)} onApriLL={() => { addPraticaLL(cl.id); setClienteSelezionato(null); setPage("ll"); }} onAddIncasso={addIncasso} onAddInsoluto={addInsoluto} showToast={showToast} />;
+    if (cl) return <SchedaCliente cliente={cl} agenti={data.agenti || []} themeMode={themeMode} onBack={() => setClienteSelezionato(null)} onUpdate={u => updateCliente(cl.id, u)} onAddDiario={v => addDiario(cl.id, v)} onApriLL={() => { addPraticaLL(cl.id); setClienteSelezionato(null); setPage("ll"); }} onAddIncasso={addIncasso} onAddInsoluto={addInsoluto} showToast={showToast} />;
   }
 
   if (agenteSelezionato) {
     const ag = data.agenti.find(a => a.id === agenteSelezionato) || data.agenti.find(a => a.nome === agenteSelezionato) || { id: null, nome: agenteSelezionato, email: "", telefono: "", zona: "" };
     const clientiAgente = (data.clienti || []).filter(c => c.agente === ag?.nome);
     const incassiAgente = (data.incassi || []).filter(i => i.agente === ag?.nome && i.stato === "IN MANO AGENTE");
-    if (ag) return <SchedaAgente agente={ag} clienti={clientiAgente} incassi={incassiAgente} onBack={() => setAgenteSelezionato(null)} onUpdate={u => updateAgente(ag.id, u)} onAddDiario={(clienteId, voce) => addDiario(clienteId, voce)} onUpdateCliente={updateCliente} onUpdateIncasso={updateIncasso} onDeleteIncasso={deleteIncasso} onSelectCliente={id => { setAgenteSelezionato(null); setClienteSelezionato(id); }} showToast={showToast} />;
+    if (ag) return <SchedaAgente agente={ag} clienti={clientiAgente} incassi={incassiAgente} themeMode={themeMode} onBack={() => setAgenteSelezionato(null)} onUpdate={u => updateAgente(ag.id, u)} onAddDiario={(clienteId, voce) => addDiario(clienteId, voce)} onUpdateCliente={updateCliente} onUpdateIncasso={updateIncasso} onDeleteIncasso={deleteIncasso} onSelectCliente={id => { setAgenteSelezionato(null); setClienteSelezionato(id); }} showToast={showToast} />;
   }
 
   return (
@@ -589,8 +621,45 @@ function Clienti({ clienti, onSelectCliente, onImporta }) {
   );
 }
 
+
+/* ─── SHARED THEME STYLES ─── */
+function getSharedStyles(T) {
+  return `
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:${T.bg};color:${T.text}}
+    input,select,textarea{background:${T.bgInput};border:1px solid ${T.borderInput};border-radius:10px;color:${T.text};padding:10px 14px;font-family:inherit;font-size:15px;width:100%;outline:none;-webkit-appearance:none}
+    input:focus,select:focus,textarea:focus{border-color:#4a7fd4}
+    select option{background:${T.bgInput}}
+    textarea{resize:vertical;min-height:80px}
+    button{cursor:pointer;font-family:inherit;font-size:14px;border:none;border-radius:10px;padding:10px 18px;transition:all .15s}
+    .btn-primary{background:#4a7fd4;color:#fff;font-weight:500}
+    .btn-ghost{background:transparent;color:${T.textSub};border:1px solid ${T.borderInput}}
+    .btn-danger{background:transparent;color:#e24b4a;border:1px solid #3a2020}
+    .btn-green{background:#0f2a1a;color:#4ecb8d;border:1px solid #1a4a2a}
+    .card{background:${T.bgCard};border:1px solid ${T.border};border-radius:16px;padding:16px}
+    .tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+    label{font-size:12px;color:${T.textSub};margin-bottom:5px;display:block;letter-spacing:.04em}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:flex-end;justify-content:center;z-index:200}
+    .modal{background:${T.bgCard};border:1px solid ${T.borderInput};border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
+    .mono{font-family:'DM Mono',monospace}
+    .form-group{margin-bottom:14px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .tab-bar{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto}
+    .tab{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid ${T.borderInput};background:transparent;color:${T.textSub};white-space:nowrap}
+    .tab.active{background:#4a7fd4;color:#fff;border-color:transparent}
+    .kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid ${T.border};font-size:13px}
+    .kv:last-child{border-bottom:none}
+    .warn-box{background:#1f1808;border:1px solid #3a2e08;border-radius:10px;padding:10px 14px;font-size:13px;color:#EF9F27;margin-bottom:14px}
+    .info-box{background:#0a1f2a;border:1px solid #1a3a4a;border-radius:10px;padding:10px 14px;font-size:13px;color:#378ADD;margin-bottom:14px}
+    .scad-row{background:${T.bgAlt};border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  `;
+}
+
 /* ─── SCHEDA CLIENTE ─── */
-function SchedaCliente({ cliente, agenti, onBack, onUpdate, onAddDiario, onApriLL, onAddIncasso, onAddInsoluto, showToast }) {
+function SchedaCliente({ cliente, agenti, themeMode, onBack, onUpdate, onAddDiario, onApriLL, onAddIncasso, onAddInsoluto, showToast }) {
+  const T = THEMES[themeMode] || THEMES.dark;
   const c = cliente;
   const [tab, setTab] = useState("info");
   const [showContatto, setShowContatto] = useState(false);
@@ -609,8 +678,8 @@ function SchedaCliente({ cliente, agenti, onBack, onUpdate, onAddDiario, onApriL
   }, [c.diario, filtroTipo]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e6df", fontFamily: "'DM Sans',sans-serif", paddingBottom: 40 }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap'); @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css'); *{box-sizing:border-box;margin:0;padding:0} input,select,textarea{background:#13131a;border:1px solid #2a2a38;border-radius:10px;color:#e8e6df;padding:10px 14px;font-family:inherit;font-size:15px;width:100%;outline:none;-webkit-appearance:none} input:focus,select:focus,textarea:focus{border-color:#4a7fd4} select option{background:#13131a} textarea{resize:vertical;min-height:80px} button{cursor:pointer;font-family:inherit;font-size:14px;border:none;border-radius:10px;padding:10px 18px;transition:all .15s} .btn-primary{background:#4a7fd4;color:#fff;font-weight:500} .btn-ghost{background:transparent;color:#9a98a0;border:1px solid #2a2a38} .btn-danger{background:transparent;color:#e24b4a;border:1px solid #3a2020} .btn-green{background:#0f2a1a;color:#4ecb8d;border:1px solid #1a4a2a} .card{background:#13131a;border:1px solid #1e1e2a;border-radius:16px;padding:16px} .tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px} label{font-size:12px;color:#7a7888;margin-bottom:5px;display:block;letter-spacing:.04em} .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:flex-end;justify-content:center;z-index:200} .modal{background:#13131a;border:1px solid #2a2a38;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto} .mono{font-family:'DM Mono',monospace} .form-group{margin-bottom:14px} .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px} .tab-bar{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto} .tab{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid #2a2a38;background:transparent;color:#5a5868;white-space:nowrap} .tab.active{background:#4a7fd4;color:#fff;border-color:transparent} .kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1a1a25;font-size:13px} .kv:last-child{border-bottom:none} .warn-box{background:#1f1808;border:1px solid #3a2e08;border-radius:10px;padding:10px 14px;font-size:13px;color:#EF9F27;margin-bottom:14px} .info-box{background:#0a1f2a;border:1px solid #1a3a4a;border-radius:10px;padding:10px 14px;font-size:13px;color:#378ADD;margin-bottom:14px} .scad-row{background:#0d0d14;border-radius:10px;padding:10px 12px;margin-bottom:8px}`}</style>
+    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'DM Sans',sans-serif", paddingBottom: 40 }}>
+      <style>{getSharedStyles(T)}</style>
 
       <div style={{ padding: "52px 20px 0", marginBottom: 16 }}>
         <button className="btn-ghost" style={{ marginBottom: 16, padding: "8px 14px", fontSize: 13 }} onClick={onBack}><i className="ti ti-arrow-left" /> Torna</button>
@@ -991,7 +1060,8 @@ function Agenti({ agenti, clienti, incassi, onAddAgente, onSelectAgente }) {
 }
 
 /* ─── SCHEDA AGENTE ─── */
-function SchedaAgente({ agente, clienti, incassi, onBack, onUpdate, onAddDiario, onUpdateCliente, onUpdateIncasso, onSelectCliente, showToast }) {
+function SchedaAgente({ agente, clienti, incassi, themeMode, onBack, onUpdate, onAddDiario, onUpdateCliente, onUpdateIncasso, onDeleteIncasso, onSelectCliente, showToast }) {
+  const T = THEMES[themeMode] || THEMES.dark;
   const [tab, setTab] = useState("clienti");
   const [tracking, setTracking] = useState({});
 
@@ -1016,8 +1086,8 @@ function SchedaAgente({ agente, clienti, incassi, onBack, onUpdate, onAddDiario,
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e6df", fontFamily: "'DM Sans',sans-serif", paddingBottom: 40 }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap'); @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css'); *{box-sizing:border-box;margin:0;padding:0} input,select,textarea{background:#13131a;border:1px solid #2a2a38;border-radius:10px;color:#e8e6df;padding:10px 14px;font-family:inherit;font-size:15px;width:100%;outline:none;-webkit-appearance:none} input:focus,select:focus{border-color:#4a7fd4} select option{background:#13131a} textarea{resize:vertical;min-height:60px} button{cursor:pointer;font-family:inherit;font-size:14px;border:none;border-radius:10px;padding:10px 18px;transition:all .15s} .btn-primary{background:#4a7fd4;color:#fff;font-weight:500} .btn-ghost{background:transparent;color:#9a98a0;border:1px solid #2a2a38} .btn-green{background:#0f2a1a;color:#4ecb8d;border:1px solid #1a4a2a} .card{background:#13131a;border:1px solid #1e1e2a;border-radius:16px;padding:16px} .tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px} label{font-size:12px;color:#7a7888;margin-bottom:5px;display:block;letter-spacing:.04em} .mono{font-family:'DM Mono',monospace} .form-group{margin-bottom:12px} .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px} .tab-bar{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto} .tab{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid #2a2a38;background:transparent;color:#5a5868;white-space:nowrap} .tab.active{background:#4a7fd4;color:#fff;border-color:transparent}`}</style>
+        <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'DM Sans',sans-serif", paddingBottom: 40 }}>
+      <style>{getSharedStyles(T)}</style>
 
       <div style={{ padding: "52px 20px 0", marginBottom: 16 }}>
         <button className="btn-ghost" style={{ marginBottom: 16, padding: "8px 14px", fontSize: 13 }} onClick={onBack}><i className="ti ti-arrow-left" /> Torna</button>
@@ -1302,12 +1372,17 @@ function Dashboard({ kpi, clienti, praticheLl, incassi, agenti, insoluti, onSele
   return (
     <div>
       <div className="section-title">Dashboard</div>
-      <div style={{ color: "#5a5868", fontSize: 13, marginBottom: 20 }}>{new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}</div>
+      <div style={{ color: "#5a5868", fontSize: 13, marginBottom: 20 }}>
+        {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
+        {kpi.dataUltimoImport && <span style={{ marginLeft: 12, fontSize: 11, color: "#4a4858" }}>· Ultimo import: {fmtData(kpi.dataUltimoImport)}</span>}
+      </div>
 
+      {/* SCADUTO */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         <div className="card" style={{ gridColumn: "1 / -1" }}>
           <div style={{ fontSize: 11, color: "#5a5868", marginBottom: 6 }}>SCADUTO TOTALE</div>
           <div className="mono" style={{ fontSize: 26, fontWeight: 700, color: "#e24b4a" }}>{fmtEur(kpi.totScaduto)}</div>
+          {kpi.dataUltimoImport && <div style={{ fontSize: 12, color: "#5a5868", marginTop: 4 }}>Ultimo import: {fmtEur(kpi.scadutoMese)}</div>}
         </div>
         {[
           { label: "Pratiche L/L", val: kpi.llAperte, color: "#e24b4a" },
@@ -1320,6 +1395,44 @@ function Dashboard({ kpi, clienti, praticheLl, incassi, agenti, insoluti, onSele
             <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: k.color }}>{k.val}</div>
           </div>
         ))}
+      </div>
+
+      {/* INCASSATO */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 14, color: "#9a98a0" }}>Incassato</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+          <div style={{ background: "#0f2a1a", border: "1px solid #1a4a2a", borderRadius: 12, padding: "12px" }}>
+            <div style={{ fontSize: 10, color: "#4ecb8d", marginBottom: 4 }}>CONFERMATO TOTALE</div>
+            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: "#4ecb8d" }}>{fmtEur(kpi.incassatoConfermatoTot)}</div>
+            <div style={{ fontSize: 11, color: "#4ecb8d88", marginTop: 2 }}>{kpi.pctConfermatoTot.toFixed(1)}% scaduto</div>
+          </div>
+          <div style={{ background: "#0a1f2a", border: "1px solid #1a3a4a", borderRadius: 12, padding: "12px" }}>
+            <div style={{ fontSize: 10, color: "#378ADD", marginBottom: 4 }}>IN CORSO TOTALE</div>
+            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: "#378ADD" }}>{fmtEur(kpi.incassatoAtteso)}</div>
+            <div style={{ fontSize: 11, color: "#378ADD88", marginTop: 2 }}>in mano/spedito</div>
+          </div>
+          <div style={{ background: "#1a1a25", border: "1px solid #2a2a38", borderRadius: 12, padding: "12px" }}>
+            <div style={{ fontSize: 10, color: "#9a98a0", marginBottom: 4 }}>TOTALE</div>
+            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: "#e8e6df" }}>{fmtEur(kpi.incassatoTotale)}</div>
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid #1e1e2a", paddingTop: 12 }}>
+          <div style={{ fontSize: 11, color: "#5a5868", marginBottom: 10 }}>QUESTO MESE</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            <div>
+              <div style={{ fontSize: 10, color: "#5a5868", marginBottom: 4 }}>Confermato</div>
+              <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: "#4ecb8d" }}>{fmtEur(kpi.incassatoConfermatoMese)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#5a5868", marginBottom: 4 }}>In corso</div>
+              <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: "#378ADD" }}>{fmtEur(kpi.incassatoAttesoMese)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#5a5868", marginBottom: 4 }}>% su scaduto</div>
+              <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: "#EF9F27" }}>{kpi.pctTotaleMese.toFixed(1)}%</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {insolutiAperti.length > 0 && (
