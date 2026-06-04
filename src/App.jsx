@@ -2,6 +2,34 @@ import { useState, useEffect, useMemo } from "react";
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxM-HnsnxAehTsVTp_YxmVOKb4xuVAMSc33wzRH0mVhRclFkRrxG7-vxIDb7SQiLgg/exec";
 
+// ─── TEMA ───
+const THEMES = {
+  dark: {
+    bg: "#0a0a0f", bgCard: "#13131a", bgAlt: "#0d0d14", bgInput: "#13131a",
+    border: "#1e1e2a", borderInput: "#2a2a38",
+    text: "#e8e6df", textSub: "#5a5868", textMuted: "#4a4858",
+    navBg: "#0d0d14", navBorder: "#1a1a25",
+    diario: {
+      "Mio contatto": { border: "#378ADD", bg: "#0a1828", label: "#378ADD" },
+      "Via agente": { border: "#4ecb8d", bg: "#0a2018", label: "#4ecb8d" },
+      "Nota personale": { border: "#5a5868", bg: "#0d0d14", label: "#7a7888" },
+      "Cliente": { border: "#9a98a0", bg: "#121218", label: "#9a98a0" },
+    }
+  },
+  light: {
+    bg: "#f4f5f7", bgCard: "#ffffff", bgAlt: "#f0f1f3", bgInput: "#ffffff",
+    border: "#e2e4e9", borderInput: "#d0d3db",
+    text: "#1a1a2e", textSub: "#6b6f7d", textMuted: "#9a9fad",
+    navBg: "#ffffff", navBorder: "#e2e4e9",
+    diario: {
+      "Mio contatto": { border: "#378ADD", bg: "#eaf3fd", label: "#2265b0" },
+      "Via agente": { border: "#1D9E75", bg: "#e6f7f2", label: "#0f6e56" },
+      "Nota personale": { border: "#9a9fad", bg: "#f4f5f7", label: "#6b6f7d" },
+      "Cliente": { border: "#c0c3cb", bg: "#f9f9fb", label: "#9a9fad" },
+    }
+  }
+};
+
 const ASSET_COLORS = {};
 const STATI_OP = ["CONTROLLA", "AGENTE", "AGENZIA", "L/L", "RICHIAMA", "PAGATO", "PROBLEMA"];
 const PRIORITA = ["ALTA", "MEDIA", "BASSA"];
@@ -18,13 +46,7 @@ const STATO_COLORS = {
 };
 const PRIORITA_COLORS = { "ALTA": "#e24b4a", "MEDIA": "#EF9F27", "BASSA": "#4ecb8d" };
 
-// Colori diario per tipo
-const DIARIO_COLORS = {
-  "Mio contatto": { border: "#378ADD", bg: "#0a1828", label: "#378ADD" },
-  "Via agente": { border: "#4ecb8d", bg: "#0a2018", label: "#4ecb8d" },
-  "Nota personale": { border: "#5a5868", bg: "#0d0d14", label: "#7a7888" },
-  "Cliente": { border: "#9a98a0", bg: "#121218", label: "#9a98a0" },
-};
+// DIARIO_COLORS is now dynamic via theme
 
 const IBAN = "IT79G0306909496100000011059";
 const AZIENDA = "Saratoga Int. Sforza SPA";
@@ -193,6 +215,13 @@ export default function App() {
   const [loadingCloud, setLoadingCloud] = useState(true);
   const [clienteSelezionato, setClienteSelezionato] = useState(null);
   const [agenteSelezionato, setAgenteSelezionato] = useState(null);
+  const [themeMode, setThemeMode] = useState(() => localStorage.getItem("crm_theme") || "dark");
+  const T = THEMES[themeMode];
+  function toggleTheme() {
+    const next = themeMode === "dark" ? "light" : "dark";
+    setThemeMode(next);
+    localStorage.setItem("crm_theme", next);
+  }
 
   useEffect(() => {
     loadFromSheets()
@@ -338,37 +367,47 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0f", color: "#e8e6df", fontFamily: "'DM Sans','Segoe UI',sans-serif", paddingBottom: 72 }}>
+    <div style={{ minHeight: "100vh", background: T.bg, color: T.text, fontFamily: "'DM Sans','Segoe UI',sans-serif", paddingBottom: 72 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
         @import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css');
+        :root {
+          --bg: ${T.bg};
+          --bg-card: ${T.bgCard};
+          --bg-input: ${T.bgInput};
+          --border: ${T.border};
+          --border-input: ${T.borderInput};
+          --text: ${T.text};
+          --text-sub: ${T.textSub};
+          --text-muted: ${T.textMuted};
+        }
         *{box-sizing:border-box;margin:0;padding:0}
-        input,select,textarea{background:#13131a;border:1px solid #2a2a38;border-radius:10px;color:#e8e6df;padding:10px 14px;font-family:inherit;font-size:15px;width:100%;outline:none;-webkit-appearance:none}
+        input,select,textarea{background:var(--bg-input);border:1px solid var(--border-input);border-radius:10px;color:var(--text);padding:10px 14px;font-family:inherit;font-size:15px;width:100%;outline:none;-webkit-appearance:none}
         input:focus,select:focus,textarea:focus{border-color:#4a7fd4}
-        select option{background:#13131a}
+        select option{background:var(--bg-input)}
         textarea{resize:vertical;min-height:80px}
         button{cursor:pointer;font-family:inherit;font-size:14px;border:none;border-radius:10px;padding:10px 18px;transition:all .15s;-webkit-tap-highlight-color:transparent}
         .btn-primary{background:#4a7fd4;color:#fff;font-weight:500}
-        .btn-ghost{background:transparent;color:#9a98a0;border:1px solid #2a2a38}
+        .btn-ghost{background:transparent;color:var(--text-sub);border:1px solid var(--border-input)}
         .btn-danger{background:transparent;color:#e24b4a;border:1px solid #3a2020}
         .btn-green{background:#0f2a1a;color:#4ecb8d;border:1px solid #1a4a2a}
-        .card{background:#13131a;border:1px solid #1e1e2a;border-radius:16px;padding:16px}
+        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px}
         .tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
-        label{font-size:12px;color:#7a7888;margin-bottom:5px;display:block;letter-spacing:.04em}
+        label{font-size:12px;color:var(--text-sub);margin-bottom:5px;display:block;letter-spacing:.04em}
         .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:flex-end;justify-content:center;z-index:200}
-        .modal{background:#13131a;border:1px solid #2a2a38;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
+        .modal{background:var(--bg-card);border:1px solid var(--border-input);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto}
         .mono{font-family:'DM Mono',monospace}
         @keyframes spin{to{transform:rotate(360deg)}}
         .spin{animation:spin 1s linear infinite;display:inline-block}
-        .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0d0d14;border-top:1px solid #1a1a25;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+        .bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
         .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;background:none;border:none;border-radius:0;font-size:9px;letter-spacing:.04em}
         .nav-btn.active{color:#4a7fd4}
-        .nav-btn:not(.active){color:#4a4858}
+        .nav-btn:not(.active){color:var(--text-muted)}
         .nav-icon{font-size:20px}
-        .section-title{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+        .section-title{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px;color:var(--text)}
         .form-group{margin-bottom:14px}
         .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        .cl-card{background:#13131a;border:1px solid #1e1e2a;border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+        .cl-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
         .cl-card:active{border-color:#4a7fd4}
         .priorita-bar{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0}
         .tab-bar{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px}
@@ -386,12 +425,13 @@ export default function App() {
 
       <div style={{ padding: "52px 20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <div style={{ fontSize: 13, color: "#4a4858", letterSpacing: ".06em" }}>CRM SOLLECITI</div>
-          <div style={{ fontSize: 11, marginTop: 2, color: syncing ? "#378ADD" : "#3a3848" }}>
+          <div style={{ fontSize: 13, color: T.textMuted, letterSpacing: ".06em" }}>CRM SOLLECITI</div>
+          <div style={{ fontSize: 11, marginTop: 2, color: syncing ? "#378ADD" : T.textMuted }}>
             {syncing ? <><span className="spin">↻</span> Sync...</> : "● " + new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "short" })}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
+          <button onClick={toggleTheme} style={{ background: "transparent", border: `1px solid ${T.borderInput}`, borderRadius: 20, padding: "5px 12px", fontSize: 16, cursor: "pointer", color: T.textSub }}>{themeMode === "dark" ? "☀️" : "🌙"}</button>
           {kpi.daRichiamare > 0 && <span style={{ background: "#1f1808", border: "1px solid #4a3010", color: "#EF9F27", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>📅 {kpi.daRichiamare}</span>}
           {kpi.insoluti > 0 && <span style={{ background: "#2a0a0a", border: "1px solid #4a1a1a", color: "#e24b4a", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>⚠ {kpi.insoluti} insoluti</span>}
           {kpi.titoliMano > 0 && <span style={{ background: "#0a1f2a", border: "1px solid #1a3a4a", color: "#378ADD", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>💼 {kpi.titoliMano}</span>}
@@ -416,7 +456,7 @@ export default function App() {
         )}
       </div>
 
-      <nav className="bottom-nav">
+      <nav className="bottom-nav" style={{ background: T.navBg, borderTop: `1px solid ${T.navBorder}` }}>
         {NAV.map(n => (
           <button key={n.id} className={`nav-btn ${page === n.id ? "active" : ""}`} onClick={() => setPage(n.id)}>
             <i className={`ti ${n.icon} nav-icon`} />
@@ -628,7 +668,8 @@ function SchedaCliente({ cliente, agenti, onBack, onUpdate, onAddDiario, onApriL
               ))}
             </div>
             {diariFiltrati.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 30, color: "#4a4858" }}>Nessuna voce</div> : diariFiltrati.map((v, i) => {
-              const dc = DIARIO_COLORS[v.tipo] || DIARIO_COLORS["Nota personale"];
+              const DIARIO_COLORS_LOCAL = THEMES[localStorage.getItem("crm_theme") || "dark"]?.diario || THEMES.dark.diario;
+          const dc = DIARIO_COLORS_LOCAL[v.tipo] || DIARIO_COLORS_LOCAL["Nota personale"];
               return (
                 <div key={i} style={{ borderLeft: `3px solid ${dc.border}`, padding: "10px 12px", background: dc.bg, borderRadius: "0 10px 10px 0", marginBottom: 8 }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -671,7 +712,8 @@ function ModalContatto({ cliente, onClose, onSave }) {
     onSave(voce, updates);
   }
 
-  const dc = DIARIO_COLORS[tipo] || DIARIO_COLORS["Nota personale"];
+  const DIARIO_COLORS_L = THEMES[localStorage.getItem("crm_theme") || "dark"]?.diario || THEMES.dark.diario;
+  const dc = DIARIO_COLORS_L[tipo] || DIARIO_COLORS_L["Nota personale"];
 
   return (
     <div className="modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
