@@ -7,7 +7,7 @@ const THEMES = {
   dark: {
     bg: "#0a0a0f", bgCard: "#13131a", bgAlt: "#0d0d14", bgInput: "#13131a",
     border: "#1e1e2a", borderInput: "#2a2a38",
-    text: "#e8e6df", textSub: "#5a5868", textMuted: "#4a4858",
+    text: "#e8e6df", textSub: "#5a5868", textMuted: "var(--text-muted)",
     navBg: "#0d0d14", navBorder: "#1a1a25",
     diario: {
       "Mio contatto": { border: "#378ADD", bg: "#0a1828", label: "#378ADD" },
@@ -29,6 +29,43 @@ const THEMES = {
     }
   }
 };
+
+// Semantic color helpers - use these instead of hardcoded hex
+function tc(T, key) {
+  const map = {
+    // Backgrounds
+    bgSearch: T === THEMES.light ? "#f0f1f3" : "#13131a",
+    bgAlt2: T === THEMES.light ? "#f9f9fb" : "#0d0d18",
+    bgInput2: T === THEMES.light ? "#f4f5f7" : "#0d0d14",
+    // Borders  
+    borderStrong: T === THEMES.light ? "#c0c3cb" : "#2a2a38",
+    borderSubtle: T === THEMES.light ? "#e8eaef" : "#1a1a25",
+    // Status boxes (keep colored but adjust for light)
+    warnBg: T === THEMES.light ? "#fffbf0" : "#1f1808",
+    warnBorder: T === THEMES.light ? "#f5d87a" : "#3a2e08",
+    infoBg: T === THEMES.light ? "#f0f7ff" : "#0a1f2a",
+    infoBorder: T === THEMES.light ? "#90c4f0" : "#1a3a4a",
+    dangerBg: T === THEMES.light ? "#fff5f5" : "#2a0a0a",
+    dangerBorder: T === THEMES.light ? "#f0a0a0" : "#4a1a1a",
+    successBg: T === THEMES.light ? "#f0fff8" : "#0f2a1a",
+    successBorder: T === THEMES.light ? "#90e0b8" : "#1a4a2a",
+    // Buttons
+    btnDangerBorder: T === THEMES.light ? "#f0a0a0" : "#3a2020",
+    btnGreenBg: T === THEMES.light ? "#f0fff8" : "#0f2a1a",
+    btnGreenBorder: T === THEMES.light ? "#90e0b8" : "#1a4a2a",
+    // Nav active
+    navActive: "#4a7fd4",
+    // Diario item backgrounds
+    diarioMioBg: T === THEMES.light ? "#eaf3fd" : "#0a1828",
+    diarioAgenteBg: T === THEMES.light ? "#e6f7f2" : "#0a2018",
+    diarioNotaBg: T === THEMES.light ? "#f4f5f7" : "#0d0d14",
+    diarioClienteBg: T === THEMES.light ? "#f9f9fb" : "#121218",
+    // Incasso card
+    incassoAlertBorder: T === THEMES.light ? "#f0a0a0" : "#3a2020",
+    incassoWarnBorder: T === THEMES.light ? "#f5d87a" : "#3a2e08",
+  };
+  return map[key] || "";
+}
 
 const ASSET_COLORS = {};
 const STATI_OP = ["CONTROLLA", "AGENTE", "AGENZIA", "L/L", "RICHIAMA", "PAGATO", "PROBLEMA"];
@@ -462,7 +499,7 @@ export default function App() {
         .tab{padding:8px 16px;border-radius:20px;font-size:13px;border:1px solid #2a2a38;background:transparent;color:#5a5868;white-space:nowrap}
         .tab.active{background:#4a7fd4;color:#fff;border-color:transparent}
         .search-wrap{position:relative;margin-bottom:16px}
-        .search-input{background:#13131a;border:1px solid #2a2a38;border-radius:12px;color:#e8e6df;padding:10px 14px 10px 38px;font-size:15px;width:100%;outline:none}
+        .search-input{background:var(--bg-input);border:1px solid var(--border-input);border-radius:12px;color:var(--text);padding:10px 14px 10px 38px;font-size:15px;width:100%;outline:none}
         .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#5a5868;font-size:18px}
         .kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1a1a25;font-size:13px}
         .kv:last-child{border-bottom:none}
@@ -481,14 +518,14 @@ export default function App() {
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center" }}>
           <button onClick={toggleTheme} style={{ background: "transparent", border: `1px solid ${T.borderInput}`, borderRadius: 20, padding: "5px 12px", fontSize: 16, cursor: "pointer", color: T.textSub }}>{themeMode === "dark" ? "☀️" : "🌙"}</button>
           {kpi.daRichiamare > 0 && <span style={{ background: "#1f1808", border: "1px solid #4a3010", color: "#EF9F27", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>📅 {kpi.daRichiamare}</span>}
-          {kpi.insoluti > 0 && <span style={{ background: "#2a0a0a", border: "1px solid #4a1a1a", color: "#e24b4a", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>⚠ {kpi.insoluti} insoluti</span>}
-          {kpi.titoliMano > 0 && <span style={{ background: "#0a1f2a", border: "1px solid #1a3a4a", color: "#378ADD", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>💼 {kpi.titoliMano}</span>}
+          {kpi.insoluti > 0 && <span style={{ background: "var(--danger-bg,#2a0a0a)", border: "1px solid var(--danger-border,#4a1a1a)", color: "#e24b4a", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>⚠ {kpi.insoluti} insoluti</span>}
+          {kpi.titoliMano > 0 && <span style={{ background: "var(--info-bg,#0a1f2a)", border: "1px solid var(--info-border,#1a3a4a)", color: "#378ADD", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>💼 {kpi.titoliMano}</span>}
         </div>
       </div>
 
       <div style={{ padding: "0 20px" }}>
         {loadingCloud ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "50vh", gap: 16, color: "#4a4858" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "50vh", gap: 16, color: "var(--text-muted)" }}>
             <span className="spin" style={{ fontSize: 36 }}>↻</span>
             <div style={{ fontSize: 14 }}>Carico dal cloud...</div>
           </div>
@@ -541,7 +578,7 @@ function Oggi({ lista, insoluti, onSelectCliente }) {
   return (
     <div>
       <div className="section-title">Oggi</div>
-      <div style={{ color: "#5a5868", fontSize: 13, marginBottom: 20 }}>{lista.length} clienti attivi</div>
+      <div style={{ color: "var(--text-sub)", fontSize: 13, marginBottom: 20 }}>{lista.length} clienti attivi</div>
       {insolutiAperti.length > 0 && (
         <div className="danger-box" style={{ marginBottom: 16 }}>
           ⚠ {insolutiAperti.length} assegni insoluti aperti — verifica scadenze 60gg
@@ -552,7 +589,7 @@ function Oggi({ lista, insoluti, onSelectCliente }) {
       <Gruppo label="🆕 Mai contattati" items={maiChiamati} colore="#e24b4a" />
       <Gruppo label="📞 Da richiamare" items={vecchi} colore="#9a98a0" />
       {lista.length === 0 && (
-        <div className="card" style={{ textAlign: "center", padding: 40, color: "#4a4858" }}>
+        <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
           <i className="ti ti-calendar-off" style={{ fontSize: 40, marginBottom: 12, display: "block" }} />
           <div style={{ fontSize: 14 }}>Nessun cliente ancora</div>
           <div style={{ fontSize: 13, marginTop: 8 }}>Importa le spaccature dalla sezione Clienti</div>
@@ -572,7 +609,7 @@ function CardCliente({ cliente, onClick }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{c.ragione}</div>
-            <div style={{ fontSize: 11, color: "#5a5868" }}>{c.agente} · {c.codice}</div>
+            <div style={{ fontSize: 11, color: "var(--text-sub)" }}>{c.agente} · {c.codice}</div>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
             <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: "#e24b4a" }}>{fmtEur(c.totaleScaduto || 0)}</div>
@@ -580,9 +617,9 @@ function CardCliente({ cliente, onClick }) {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          {c.ultimoContatto ? <span style={{ fontSize: 11, color: "#5a5868" }}>Ultimo: {fmtData(c.ultimoContatto)} ({giorni < 9999 ? `${giorni}gg fa` : "—"})</span> : <span style={{ fontSize: 11, color: "#e24b4a" }}>Mai contattato</span>}
+          {c.ultimoContatto ? <span style={{ fontSize: 11, color: "var(--text-sub)" }}>Ultimo: {fmtData(c.ultimoContatto)} ({giorni < 9999 ? `${giorni}gg fa` : "—"})</span> : <span style={{ fontSize: 11, color: "#e24b4a" }}>Mai contattato</span>}
           {c.dataRichiamo === oggi() && <span style={{ background: "#1f1808", border: "1px solid #4a3010", color: "#EF9F27", borderRadius: 8, padding: "2px 8px", fontSize: 11 }}>⏰ oggi</span>}
-          {c.esito && <span style={{ fontSize: 11, color: "#7a7888", fontStyle: "italic" }}>"{c.esito.slice(0, 40)}{c.esito.length > 40 ? "…" : ""}"</span>}
+          {c.esito && <span style={{ fontSize: 11, color: "var(--text-sub)", fontStyle: "italic" }}>"{c.esito.slice(0, 40)}{c.esito.length > 40 ? "…" : ""}"</span>}
         </div>
       </div>
     </div>
@@ -605,7 +642,7 @@ function Clienti({ clienti, onSelectCliente, onImporta }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-        <div><div className="section-title">Clienti</div><div style={{ color: "#5a5868", fontSize: 13 }}>{clienti.length} totali · {filtrati.length} mostrati</div></div>
+        <div><div className="section-title">Clienti</div><div style={{ color: "var(--text-sub)", fontSize: 13 }}>{clienti.length} totali · {filtrati.length} mostrati</div></div>
         <label style={{ background: "#4a7fd4", color: "#fff", borderRadius: 10, padding: "10px 14px", fontSize: 14, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
           <i className="ti ti-upload" /> Importa
           <input type="file" accept=".xlsx,.xls,.xlsm" style={{ display: "none" }} onChange={e => e.target.files[0] && onImporta(e.target.files[0])} />
@@ -613,10 +650,10 @@ function Clienti({ clienti, onSelectCliente, onImporta }) {
       </div>
       <div className="search-wrap"><i className="ti ti-search search-icon" /><input className="search-input" placeholder="Cerca nome o codice..." value={search} onChange={e => setSearch(e.target.value)} /></div>
       <div style={{ display: "flex", gap: 8, marginBottom: 12, overflowX: "auto", paddingBottom: 4 }}>
-        {["TUTTI", ...STATI_OP].map(s => <button key={s} onClick={() => setFiltroStato(s)} style={{ padding: "7px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: filtroStato === s ? "#4a7fd4" : "transparent", color: filtroStato === s ? "#fff" : "#5a5868", border: filtroStato === s ? "none" : "1px solid #2a2a38" }}>{s}</button>)}
+        {["TUTTI", ...STATI_OP].map(s => <button key={s} onClick={() => setFiltroStato(s)} style={{ padding: "7px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: filtroStato === s ? "#4a7fd4" : "transparent", color: filtroStato === s ? "#fff" : "#5a5868", border: filtroStato === s ? "none" : "1px solid var(--border-input)" }}>{s}</button>)}
       </div>
       <div className="form-group"><select value={filtroAgente} onChange={e => setFiltroAgente(e.target.value)}>{agenti.map(a => <option key={a}>{a}</option>)}</select></div>
-      {filtrati.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "#4a4858" }}><div style={{ fontSize: 13 }}>Nessun cliente trovato</div></div> : filtrati.map(c => <CardCliente key={c.id} cliente={c} onClick={() => onSelectCliente(c.id)} />)}
+      {filtrati.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}><div style={{ fontSize: 13 }}>Nessun cliente trovato</div></div> : filtrati.map(c => <CardCliente key={c.id} cliente={c} onClick={() => onSelectCliente(c.id)} />)}
     </div>
   );
 }
@@ -654,6 +691,22 @@ function getSharedStyles(T) {
     .warn-box{background:#1f1808;border:1px solid #3a2e08;border-radius:10px;padding:10px 14px;font-size:13px;color:#EF9F27;margin-bottom:14px}
     .info-box{background:#0a1f2a;border:1px solid #1a3a4a;border-radius:10px;padding:10px 14px;font-size:13px;color:#378ADD;margin-bottom:14px}
     .scad-row{background:${T.bgAlt};border-radius:10px;padding:10px 12px;margin-bottom:8px}
+    .warn-box{background:${T === THEMES.light ? '#fffbf0' : '#1f1808'};border:1px solid ${T === THEMES.light ? '#f5d87a' : '#3a2e08'};border-radius:10px;padding:10px 14px;font-size:13px;color:#EF9F27;margin-bottom:14px}
+    .info-box{background:${T === THEMES.light ? '#f0f7ff' : '#0a1f2a'};border:1px solid ${T === THEMES.light ? '#90c4f0' : '#1a3a4a'};border-radius:10px;padding:10px 14px;font-size:13px;color:#378ADD;margin-bottom:14px}
+    .danger-box{background:${T === THEMES.light ? '#fff5f5' : '#2a0a0a'};border:1px solid ${T === THEMES.light ? '#f0a0a0' : '#4a1a1a'};border-radius:10px;padding:10px 14px;font-size:13px;color:#e24b4a;margin-bottom:14px}
+    :root {
+      --bg: ${T.bg}; --bg-card: ${T.bgCard}; --bg-alt: ${T.bgAlt}; --bg-input: ${T.bgInput};
+      --border: ${T.border}; --border-input: ${T.borderInput};
+      --text: ${T.text}; --text-sub: ${T.textSub}; --text-muted: ${T.textMuted};
+      --warn-bg: ${T === THEMES.light ? '#fffbf0' : '#1f1808'};
+      --warn-border: ${T === THEMES.light ? '#f5d87a' : '#3a2e08'};
+      --info-bg: ${T === THEMES.light ? '#f0f7ff' : '#0a1f2a'};
+      --info-border: ${T === THEMES.light ? '#90c4f0' : '#1a3a4a'};
+      --danger-bg: ${T === THEMES.light ? '#fff5f5' : '#2a0a0a'};
+      --danger-border: ${T === THEMES.light ? '#f0a0a0' : '#4a1a1a'};
+      --success-bg: ${T === THEMES.light ? '#f0fff8' : '#0f2a1a'};
+      --success-border: ${T === THEMES.light ? '#90e0b8' : '#1a4a2a'};
+    }
   `;
 }
 
@@ -686,7 +739,7 @@ function SchedaCliente({ cliente, agenti, themeMode, onBack, onUpdate, onAddDiar
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{c.ragione}</div>
-            <div style={{ fontSize: 12, color: "#5a5868" }}>{c.codice} · {c.agente}</div>
+            <div style={{ fontSize: 12, color: "var(--text-sub)" }}>{c.codice} · {c.agente}</div>
             <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
               <span className="tag" style={{ background: (STATO_COLORS[c.statoOp] || "#888") + "22", color: STATO_COLORS[c.statoOp] || "#888" }}>{c.statoOp}</span>
               <span className="tag" style={{ background: (PRIORITA_COLORS[c.priorita] || "#888") + "22", color: PRIORITA_COLORS[c.priorita] || "#888" }}>{c.priorita}</span>
@@ -694,7 +747,7 @@ function SchedaCliente({ cliente, agenti, themeMode, onBack, onUpdate, onAddDiar
           </div>
           <div style={{ textAlign: "right" }}>
             <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: "#e24b4a" }}>{fmtEur(c.totaleScaduto || 0)}</div>
-            <div style={{ fontSize: 11, color: "#5a5868", marginTop: 2 }}>scaduto</div>
+            <div style={{ fontSize: 11, color: "var(--text-sub)", marginTop: 2 }}>scaduto</div>
           </div>
         </div>
       </div>
@@ -709,7 +762,7 @@ function SchedaCliente({ cliente, agenti, themeMode, onBack, onUpdate, onAddDiar
         </div>
 
         {c.dataRichiamo && <div className="warn-box">⏰ Richiamo: {fmtData(c.dataRichiamo)}</div>}
-        {c.esito && <div style={{ background: "#13131a", border: "1px solid #2a2a38", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 13, color: "#9a98a0" }}><span style={{ fontSize: 11, color: "#5a5868" }}>ULTIMO ESITO · </span>{c.esito}{c.ultimoContatto && <span style={{ fontSize: 11, color: "#5a5868" }}> · {fmtData(c.ultimoContatto)}</span>}</div>}
+        {c.esito && <div style={{ background: "var(--bg-card)", border: "1px solid var(--border-input)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 13, color: "var(--text-sub)" }}><span style={{ fontSize: 11, color: "var(--text-sub)" }}>ULTIMO ESITO · </span>{c.esito}{c.ultimoContatto && <span style={{ fontSize: 11, color: "var(--text-sub)" }}> · {fmtData(c.ultimoContatto)}</span>}</div>}
 
         <div className="tab-bar">
           {[["info", "Info"], ["scadenze", `Scad. (${scadenzeAperte.length})`], ["diario", `Diario (${(c.diario || []).length})`]].map(([k, l]) => (
@@ -721,7 +774,7 @@ function SchedaCliente({ cliente, agenti, themeMode, onBack, onUpdate, onAddDiar
           <div>
             <div className="card" style={{ marginBottom: 12 }}>
               {[["Email", c.email || "—"], ["Telefono", c.telefono || "—"], ["Cellulare", c.cellulare || "—"], ["Orari", c.orari || "—"], ["Riferimento", c.personeRif || "—"], ["Agente", c.agente || "—"], ["Località", `${c.localita || "—"} (${c.prov || "—"})`], ["Max ritardo", c.giorniMaxRitardo ? `${c.giorniMaxRitardo}gg` : "—"]].map(([k, v]) => (
-                <div key={k} className="kv"><span style={{ color: "#5a5868" }}>{k}</span><span style={{ fontWeight: 500 }}>{v}</span></div>
+                <div key={k} className="kv"><span style={{ color: "var(--text-sub)" }}>{k}</span><span style={{ fontWeight: 500 }}>{v}</span></div>
               ))}
             </div>
             <button className="btn-danger" style={{ width: "100%", fontSize: 13 }} onClick={onApriLL}><i className="ti ti-file-text" /> Apri pratica L/L</button>
@@ -731,13 +784,13 @@ function SchedaCliente({ cliente, agenti, themeMode, onBack, onUpdate, onAddDiar
         {tab === "scadenze" && (
           <div>
             <button className="btn-ghost" style={{ width: "100%", marginBottom: 12, fontSize: 13 }} onClick={() => setShowAccorpa(true)}><i className="ti ti-arrows-join" /> Gestisci pagamento / accorpa</button>
-            {scadenzeAperte.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 30, color: "#4a4858" }}>Nessuna scadenza aperta</div> : scadenzeAperte.map((s, i) => (
+            {scadenzeAperte.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 30, color: "var(--text-muted)" }}>Nessuna scadenza aperta</div> : scadenzeAperte.map((s, i) => (
               <div key={i} className="scad-row">
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontWeight: 500, fontSize: 14 }}>Ft. {s.doc}</span>
                   <span className="mono" style={{ fontWeight: 600 }}>{fmtEur(s.residuo || s.importo)}</span>
                 </div>
-                <div style={{ fontSize: 12, color: "#5a5868" }}>Scad: {fmtData(s.scadenza)} · {s.giorni || 0}gg ritardo
+                <div style={{ fontSize: 12, color: "var(--text-sub)" }}>Scad: {fmtData(s.scadenza)} · {s.giorni || 0}gg ritardo
                   {s.residuo < s.importo && <span style={{ color: "#EF9F27", marginLeft: 8 }}>Parziale (orig. {fmtEur(s.importo)})</span>}
                 </div>
               </div>
@@ -749,18 +802,18 @@ function SchedaCliente({ cliente, agenti, themeMode, onBack, onUpdate, onAddDiar
           <div>
             <div style={{ display: "flex", gap: 8, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
               {["TUTTI", ...TIPI_DIARIO].map(t => (
-                <button key={t} onClick={() => setFiltroTipo(t)} style={{ padding: "6px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: filtroTipo === t ? "#4a7fd4" : "transparent", color: filtroTipo === t ? "#fff" : "#5a5868", border: filtroTipo === t ? "none" : "1px solid #2a2a38" }}>{t}</button>
+                <button key={t} onClick={() => setFiltroTipo(t)} style={{ padding: "6px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: filtroTipo === t ? "#4a7fd4" : "transparent", color: filtroTipo === t ? "#fff" : "#5a5868", border: filtroTipo === t ? "none" : "1px solid var(--border-input)" }}>{t}</button>
               ))}
             </div>
-            {diariFiltrati.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 30, color: "#4a4858" }}>Nessuna voce</div> : diariFiltrati.map((v, i) => {
+            {diariFiltrati.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 30, color: "var(--text-muted)" }}>Nessuna voce</div> : diariFiltrati.map((v, i) => {
               const DIARIO_COLORS_LOCAL = THEMES[localStorage.getItem("crm_theme") || "dark"]?.diario || THEMES.dark.diario;
           const dc = DIARIO_COLORS_LOCAL[v.tipo] || DIARIO_COLORS_LOCAL["Nota personale"];
               return (
                 <div key={i} style={{ borderLeft: `3px solid ${dc.border}`, padding: "10px 12px", background: dc.bg, borderRadius: "0 10px 10px 0", marginBottom: 8 }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, color: "#5a5868" }}>{fmtData(v.data)} {v.ora}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-sub)" }}>{fmtData(v.data)} {v.ora}</span>
                     <span style={{ fontSize: 11, fontWeight: 500, color: dc.label, background: dc.bg, border: `1px solid ${dc.border}`, padding: "1px 8px", borderRadius: 20 }}>{v.tipo}</span>
-                    {v.canale && <span className="tag" style={{ background: "#1a1a25", color: "#9a98a0" }}>{v.canale}</span>}
+                    {v.canale && <span className="tag" style={{ background: "#1a1a25", color: "var(--text-sub)" }}>{v.canale}</span>}
                     {v.stato && <span className="tag" style={{ background: (STATO_COLORS[v.stato] || "#888") + "22", color: STATO_COLORS[v.stato] || "#888" }}>{v.stato}</span>}
                   </div>
                   <div style={{ fontSize: 13, lineHeight: 1.5 }}>{v.testo || v.esito}</div>
@@ -870,7 +923,7 @@ function ModalInsoluto({ cliente, agenti, onClose, onSave }) {
               {["Mancanza fondi", "Impagato", "Conto chiuso", "Firma non corrispondente", "Altro"].map(m => <option key={m}>{m}</option>)}
             </select>
           </div>
-          <div style={{ background: "#2a0a0a", border: "1px solid #4a1a1a", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 13, color: "#e24b4a" }}>
+          <div style={{ background: "var(--danger-bg,#2a0a0a)", border: "1px solid var(--danger-border,#4a1a1a)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 13, color: "#e24b4a" }}>
             Il cliente passerà automaticamente in stato <strong>PROBLEMA</strong> e avrai 60 giorni per la regolarizzazione.
           </div>
           <button type="submit" className="btn-danger" style={{ width: "100%", padding: 14, marginBottom: 10 }}>Registra insoluto</button>
@@ -910,7 +963,7 @@ function ModalIncasso({ cliente, onClose, onSave }) {
             <div className="form-group"><label>IMPORTO (€)</label><input type="number" step="0.01" value={importo} onChange={e => setImporto(e.target.value)} required /></div>
             <div className="form-group"><label>SPESE (€)</label><input type="number" step="0.01" value={spese} onChange={e => setSpese(e.target.value)} /></div>
           </div>
-          {importo && <div style={{ background: "#0f2a1a", border: "1px solid #1a4a2a", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 13, color: "#4ecb8d" }}>Netto: {fmtEur(parseFloat(importo || 0) - parseFloat(spese || 0))}</div>}
+          {importo && <div style={{ background: "var(--success-bg,#0f2a1a)", border: "1px solid var(--success-border,#1a4a2a)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontSize: 13, color: "#4ecb8d" }}>Netto: {fmtEur(parseFloat(importo || 0) - parseFloat(spese || 0))}</div>}
           <div className="form-group"><label>FATTURE</label><input value={fatture} onChange={e => setFatture(e.target.value)} placeholder="es. Ft.001 + Ft.002" /></div>
           <div className="form-group"><label>NOTE</label><textarea value={note} onChange={e => setNote(e.target.value)} style={{ minHeight: 60 }} /></div>
           <button type="submit" className="btn-primary" style={{ width: "100%", padding: 14 }}>Registra incasso</button>
@@ -962,13 +1015,13 @@ function ModalAccorpa({ cliente, onClose, onSave }) {
           {tipoOp === "accorpa" && <div className="form-group"><label>FATTURA ACCORPANTE</label><input value={fatturaAccorpante} onChange={e => setFatturaAccorpante(e.target.value)} placeholder="es. 12345" /></div>}
           <div className="form-group"><label>SCADENZE ({selezionate.length} selezionate)</label>
             {scadenzeAperte.map((s, i) => (
-              <div key={i} onClick={() => toggleSel(s.tag)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: selezionate.includes(s.tag) ? "#0f2a1a" : "#0d0d14", border: `1px solid ${selezionate.includes(s.tag) ? "#1a4a2a" : "#1a1a25"}`, borderRadius: 10, marginBottom: 6, cursor: "pointer" }}>
+              <div key={i} onClick={() => toggleSel(s.tag)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: selezionate.includes(s.tag) ? "#0f2a1a" : "var(--bg-alt)", border: `1px solid ${selezionate.includes(s.tag) ? "#1a4a2a" : "var(--border)"}`, borderRadius: 10, marginBottom: 6, cursor: "pointer" }}>
                 <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${selezionate.includes(s.tag) ? "#4ecb8d" : "#2a2a38"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {selezionate.includes(s.tag) && <span style={{ color: "#4ecb8d", fontSize: 12 }}>✓</span>}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 500 }}>Ft. {s.doc} — {fmtEur(s.residuo || s.importo)}</div>
-                  <div style={{ fontSize: 11, color: "#5a5868" }}>Scad: {fmtData(s.scadenza)}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-sub)" }}>Scad: {fmtData(s.scadenza)}</div>
                 </div>
               </div>
             ))}
@@ -1006,7 +1059,7 @@ function Agenti({ agenti, clienti, incassi, onAddAgente, onSelectAgente }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-        <div><div className="section-title">Agenti</div><div style={{ color: "#5a5868", fontSize: 13 }}>{agentiNomi.length} agenti</div></div>
+        <div><div className="section-title">Agenti</div><div style={{ color: "var(--text-sub)", fontSize: 13 }}>{agentiNomi.length} agenti</div></div>
         <button className="btn-primary" onClick={() => setShowForm(s => !s)}>{showForm ? "Chiudi" : "+ Aggiungi"}</button>
       </div>
 
@@ -1040,16 +1093,16 @@ function Agenti({ agenti, clienti, incassi, onAddAgente, onSelectAgente }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15 }}>{nomeAg}</div>
-                {ag?.zona && <div style={{ fontSize: 11, color: "#5a5868" }}>{ag.zona}</div>}
+                {ag?.zona && <div style={{ fontSize: 11, color: "var(--text-sub)" }}>{ag.zona}</div>}
                 {!ag && <div style={{ fontSize: 11, color: "#4a3010" }}>⚠ Anagrafica mancante</div>}
               </div>
               <div style={{ textAlign: "right" }}>
                 <div className="mono" style={{ fontWeight: 600, color: "#e24b4a" }}>{fmtEur(totScaduto)}</div>
-                <div style={{ fontSize: 11, color: "#5a5868" }}>scaduto</div>
+                <div style={{ fontSize: 11, color: "var(--text-sub)" }}>scaduto</div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, fontSize: 12 }}>
-              <span style={{ color: "#5a5868" }}>{clientiAg.length} clienti attivi</span>
+              <span style={{ color: "var(--text-sub)" }}>{clientiAg.length} clienti attivi</span>
               {incassiAg.length > 0 && <span style={{ color: hasAlert ? "#EF9F27" : "#378ADD" }}>💼 {fmtEur(totMano)} in mano</span>}
             </div>
           </div>
@@ -1094,7 +1147,7 @@ function SchedaAgente({ agente, clienti, incassi, themeMode, onBack, onUpdate, o
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{agente.nome}</div>
-            <div style={{ fontSize: 12, color: "#5a5868" }}>{agente.zona || "—"} · {agente.email || "—"}</div>
+            <div style={{ fontSize: 12, color: "var(--text-sub)" }}>{agente.zona || "—"} · {agente.email || "—"}</div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div className="mono" style={{ fontSize: 20, fontWeight: 700, color: "#e24b4a" }}>{fmtEur(totScaduto)}</div>
@@ -1114,19 +1167,19 @@ function SchedaAgente({ agente, clienti, incassi, themeMode, onBack, onUpdate, o
           <div>
             <div style={{ display: "flex", gap: 8, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
               {["TUTTI", "AGENTE", "PROBLEMA", "CONTROLLA", "L/L", "AGENZIA", "RICHIAMA"].map(s => (
-                <button key={s} onClick={() => setSortStato(s)} style={{ padding: "6px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: sortStato === s ? "#4a7fd4" : "transparent", color: sortStato === s ? "#fff" : "#5a5868", border: sortStato === s ? "none" : "1px solid #2a2a38" }}>{s}</button>
+                <button key={s} onClick={() => setSortStato(s)} style={{ padding: "6px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: sortStato === s ? "#4a7fd4" : "transparent", color: sortStato === s ? "#fff" : "var(--text-sub)", border: sortStato === s ? "none" : "1px solid var(--border-input)" }}>{s}</button>
               ))}
             </div>
             {clientiOrdinati.map(c => (
               <ClienteAgente key={c.id} cliente={c} onApriScheda={() => onSelectCliente(c.id)} onAnnota={(testo, richiamo) => registraContattoSuCliente(c.id, testo, richiamo)} showToast={showToast} />
             ))}
-            {clienti.length === 0 && <div className="card" style={{ textAlign: "center", padding: 40, color: "#4a4858" }}>Nessun cliente assegnato</div>}
+            {clienti.length === 0 && <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Nessun cliente assegnato</div>}
           </div>
         )}
 
         {tab === "titoli" && (
           <div>
-            {incassi.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "#4a4858" }}>Nessun titolo in mano</div> : incassi.map(i => {
+            {incassi.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Nessun titolo in mano</div> : incassi.map(i => {
               const gg = giorniDa(i.dataRicezione);
               const isAlert = gg > 30;
               const isWarn = gg > 15 && !isAlert;
@@ -1135,11 +1188,11 @@ function SchedaAgente({ agente, clienti, incassi, themeMode, onBack, onUpdate, o
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14, cursor: "pointer", color: "#4a7fd4" }} onClick={() => onSelectCliente(i.clienteId)}>{i.ragione}</div>
-                      <div style={{ fontSize: 11, color: "#5a5868" }}>{i.tipo} · {fmtData(i.dataRicezione)} ({gg}gg fa)</div>
+                      <div style={{ fontSize: 11, color: "var(--text-sub)" }}>{i.tipo} · {fmtData(i.dataRicezione)} ({gg}gg fa)</div>
                     </div>
                     <div className="mono" style={{ fontWeight: 600 }}>{fmtEur(i.incassoNetto || i.importo)}</div>
                   </div>
-                  {i.note && <div style={{ fontSize: 12, color: "#7a7888", marginBottom: 8 }}>{i.note}</div>}
+                  {i.note && <div style={{ fontSize: 12, color: "var(--text-sub)", marginBottom: 8 }}>{i.note}</div>}
                   {isAlert && <div style={{ fontSize: 12, color: "#e24b4a", marginBottom: 8, fontWeight: 500 }}>⚠ In mano da {gg}gg — sollecita!</div>}
                   {isWarn && <div style={{ fontSize: 12, color: "#EF9F27", marginBottom: 8 }}>⏳ In mano da {gg}gg</div>}
                   <div style={{ display: "flex", gap: 8 }}>
@@ -1156,8 +1209,8 @@ function SchedaAgente({ agente, clienti, incassi, themeMode, onBack, onUpdate, o
         {tab === "info" && (
           <div className="card">
             {[["Nome", agente.nome], ["Email", agente.email || "—"], ["Telefono", agente.telefono || "—"], ["Zona", agente.zona || "—"]].map(([k, v]) => (
-              <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #1a1a25", fontSize: 13 }}>
-                <span style={{ color: "#5a5868" }}>{k}</span><span style={{ fontWeight: 500 }}>{v}</span>
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)", fontSize: 13 }}>
+                <span style={{ color: "var(--text-sub)" }}>{k}</span><span style={{ fontWeight: 500 }}>{v}</span>
               </div>
             ))}
           </div>
@@ -1178,11 +1231,11 @@ function ClienteAgente({ cliente, onApriScheda, onAnnota }) {
   const ultimeViaAgente = (c.diario || []).filter(v => v.tipo === "Via agente").slice(0, 2);
 
   return (
-    <div style={{ background: "#13131a", border: `1px solid ${c.statoOp === "AGENTE" ? "#3a2e08" : "#1e1e2a"}`, borderRadius: 14, padding: 14, marginBottom: 10 }}>
+    <div style={{ background: "var(--bg-card)", border: `1px solid ${c.statoOp === "AGENTE" ? "#3a2e08" : "#1e1e2a"}`, borderRadius: 14, padding: 14, marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
         <div>
           <div style={{ fontWeight: 600, fontSize: 14, cursor: "pointer", color: "#4a7fd4" }} onClick={onApriScheda}>{c.ragione}</div>
-          <div style={{ fontSize: 11, color: "#5a5868" }}>{c.codice}</div>
+          <div style={{ fontSize: 11, color: "var(--text-sub)" }}>{c.codice}</div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div className="mono" style={{ fontWeight: 600, color: "#e24b4a" }}>{fmtEur(c.totaleScaduto || 0)}</div>
@@ -1194,7 +1247,7 @@ function ClienteAgente({ cliente, onApriScheda, onAnnota }) {
       {ultimeViaAgente.length > 0 && (
         <div style={{ marginBottom: 8 }}>
           {ultimeViaAgente.map((v, i) => (
-            <div key={i} style={{ fontSize: 12, color: "#4ecb8d", borderLeft: "2px solid #4ecb8d", paddingLeft: 8, marginBottom: 4 }}>
+            <div key={i} style={{ fontSize: 12, color: "#4ecb8d", borderLeft: "2px solid #4ecb8d", paddingLeft: 8, marginBottom: 4, background: "var(--bg-alt)", borderRadius: "4px" }}>
               {fmtData(v.data)}: {v.testo?.slice(0, 60)}{v.testo?.length > 60 ? "…" : ""}
             </div>
           ))}
@@ -1207,7 +1260,7 @@ function ClienteAgente({ cliente, onApriScheda, onAnnota }) {
         </button>
       ) : (
         <div style={{ marginTop: 8 }}>
-          <textarea value={testo} onChange={e => setTesto(e.target.value)} placeholder="Cosa ti ha detto l'agente su questo cliente..." style={{ marginBottom: 8, fontSize: 14, minHeight: 60, background: "#0a2018", border: "1px solid #4ecb8d33", borderRadius: 10, color: "#e8e6df", padding: "10px 14px", width: "100%", outline: "none" }} />
+          <textarea value={testo} onChange={e => setTesto(e.target.value)} placeholder="Cosa ti ha detto l'agente su questo cliente..." style={{ marginBottom: 8, fontSize: 14, minHeight: 60, background: "var(--diario-agente-bg, #0a2018)", border: "1px solid #4ecb8d44", borderRadius: 10, color: "var(--text)", padding: "10px 14px", width: "100%", outline: "none" }} />
           <div style={{ display: "flex", gap: 8 }}>
             <input type="date" value={richiamo} onChange={e => setRichiamo(e.target.value)} placeholder="Richiamo (opc.)" style={{ flex: 1, fontSize: 13, padding: "8px 10px" }} />
             <button className="btn-green" style={{ fontSize: 13, padding: "8px 14px" }} onClick={() => { if (testo) { onAnnota(testo, richiamo ? addGiorni(richiamo, 1) : ""); setTesto(""); setRichiamo(""); setShowAnnota(false); } }}>Salva</button>
@@ -1234,14 +1287,14 @@ function PraticheLl({ pratiche, clienti, onUpdate, onSelectCliente, showToast })
   return (
     <div>
       <div className="section-title">Pratiche L/L</div>
-      <div style={{ color: "#5a5868", fontSize: 13, marginBottom: 16 }}>{pratiche.filter(p => p.stato !== "AGENZIA" && p.stato !== "CHIUSA").length} aperte</div>
+      <div style={{ color: "var(--text-sub)", fontSize: 13, marginBottom: 16 }}>{pratiche.filter(p => p.stato !== "AGENZIA" && p.stato !== "CHIUSA").length} aperte</div>
       <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto" }}>
         {["ATTIVE", "IN CODA", "LETTERA 1", "LETTERA 2", "LETTERA 3", "AGENZIA", "TUTTE"].map(f => (
-          <button key={f} onClick={() => setFiltro(f)} style={{ padding: "7px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: filtro === f ? "#4a7fd4" : "transparent", color: filtro === f ? "#fff" : "#5a5868", border: filtro === f ? "none" : "1px solid #2a2a38" }}>{f}</button>
+          <button key={f} onClick={() => setFiltro(f)} style={{ padding: "7px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: filtro === f ? "#4a7fd4" : "transparent", color: filtro === f ? "#fff" : "var(--text-sub)", border: filtro === f ? "none" : "1px solid var(--border-input)" }}>{f}</button>
         ))}
       </div>
       {praticheFiltrate.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: 40, color: "#4a4858" }}><div style={{ fontSize: 13 }}>Nessuna pratica</div></div>
+        <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}><div style={{ fontSize: 13 }}>Nessuna pratica</div></div>
       ) : praticheFiltrate.map(p => {
         const gg = p.dataUltimaLettera ? giorniDa(p.dataUltimaLettera) : null;
         const pronta = gg === null || gg >= 20;
@@ -1250,15 +1303,15 @@ function PraticheLl({ pratiche, clienti, onUpdate, onSelectCliente, showToast })
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 15, cursor: "pointer", color: "#4a7fd4", marginBottom: 2 }} onClick={() => { const cl = clienti.find(c => c.id === p.clienteId); if (cl) onSelectCliente(cl.id); }}>{p.ragione}</div>
-                <div style={{ fontSize: 11, color: "#5a5868" }}>{p.agente} · {fmtData(p.dataDecisione)}</div>
+                <div style={{ fontSize: 11, color: "var(--text-sub)" }}>{p.agente} · {fmtData(p.dataDecisione)}</div>
               </div>
               <span style={{ background: p.stato === "AGENZIA" ? "#7F77DD22" : p.stato === "IN CODA" ? "#EF9F2722" : "#e24b4a22", color: p.stato === "AGENZIA" ? "#7F77DD" : p.stato === "IN CODA" ? "#EF9F27" : "#e24b4a", fontSize: 12, padding: "4px 10px", borderRadius: 8 }}>{p.stato}</span>
             </div>
             <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
-              {["C", "L1", "L2", "L3", "AG"].map((s, i) => <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= (p.lettera || 0) ? "#e24b4a" : "#1e1e2a" }} />)}
+              {["C", "L1", "L2", "L3", "AG"].map((s, i) => <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= (p.lettera || 0) ? "#e24b4a" : "var(--border)" }} />)}
             </div>
             {gg !== null && <div style={{ fontSize: 12, color: gg >= 20 ? "#4ecb8d" : "#EF9F27", marginBottom: 8 }}>{gg >= 20 ? `✓ Pronta (${gg}gg)` : `⏳ Ancora ${20 - gg}gg`}</div>}
-            {p.esito && <div style={{ fontSize: 12, color: "#5a5868", marginBottom: 10 }}>Esito: {p.esito}</div>}
+            {p.esito && <div style={{ fontSize: 12, color: "var(--text-sub)", marginBottom: 10 }}>Esito: {p.esito}</div>}
             <div style={{ display: "flex", gap: 8 }}>
               {p.stato !== "AGENZIA" && <select onChange={e => e.target.value && onUpdate(p.id, { esito: e.target.value, dataEsito: oggi() })} defaultValue="" style={{ flex: 1, fontSize: 13, padding: "8px 10px" }}>
                 <option value="">Esito raccomandata...</option>
@@ -1294,15 +1347,15 @@ function Incassi({ incassi, clienti, onAdd, onUpdate, onDelete, onSelectCliente,
     const [tracking, setTracking] = useState("");
     const gg = giorniDa(inc.dataRicezione);
     return (
-      <div className="card" style={{ marginBottom: 10, borderColor: gg > 30 ? "#3a2020" : gg > 15 ? "#3a2e08" : "#1e1e2a" }}>
+      <div className="card" style={{ marginBottom: 10, borderColor: gg > 30 ? "#e24b4a44" : gg > 15 ? "#EF9F2744" : "var(--border)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: 14, cursor: "pointer", color: "#4a7fd4" }} onClick={() => { const cl = clienti.find(c => c.id === inc.clienteId); if (cl) onSelectCliente(cl.id); }}>{inc.ragione}</div>
-            <div style={{ fontSize: 11, color: "#5a5868" }}>{inc.agente} · {inc.tipo} · {fmtData(inc.dataRicezione)} ({gg}gg)</div>
+            <div style={{ fontSize: 11, color: "var(--text-sub)" }}>{inc.agente} · {inc.tipo} · {fmtData(inc.dataRicezione)} ({gg}gg)</div>
           </div>
           <div className="mono" style={{ fontWeight: 600 }}>{fmtEur(inc.incassoNetto || inc.importo)}</div>
         </div>
-        {inc.note && <div style={{ fontSize: 12, color: "#7a7888", marginBottom: 8 }}>{inc.note}</div>}
+        {inc.note && <div style={{ fontSize: 12, color: "var(--text-sub)", marginBottom: 8 }}>{inc.note}</div>}
         {gg > 30 && <div style={{ fontSize: 12, color: "#e24b4a", marginBottom: 8, fontWeight: 500 }}>⚠ {gg}gg — sollecita spedizione!</div>}
         {gg > 15 && gg <= 30 && <div style={{ fontSize: 12, color: "#EF9F27", marginBottom: 8 }}>⏳ {gg}gg in mano</div>}
         {inc.stato === "IN MANO AGENTE" && (
@@ -1326,24 +1379,24 @@ function Incassi({ incassi, clienti, onAdd, onUpdate, onDelete, onSelectCliente,
   return (
     <div>
       <div className="section-title">Incassi agenti</div>
-      <div style={{ color: "#5a5868", fontSize: 13, marginBottom: 16 }}>{inMano.length} in mano · {spediti.length} spediti</div>
+      <div style={{ color: "var(--text-sub)", fontSize: 13, marginBottom: 16 }}>{inMano.length} in mano · {spediti.length} spediti</div>
       <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto" }}>
         {[["mano", `In mano (${inMano.length})`], ["agente", "Per agente"], ["spediti", `Spediti (${spediti.length})`], ["tutti", "Tutti"]].map(([k, l]) => (
-          <button key={k} onClick={() => setTab(k)} style={{ padding: "7px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: tab === k ? "#4a7fd4" : "transparent", color: tab === k ? "#fff" : "#5a5868", border: tab === k ? "none" : "1px solid #2a2a38" }}>{l}</button>
+          <button key={k} onClick={() => setTab(k)} style={{ padding: "7px 14px", fontSize: 12, borderRadius: 20, whiteSpace: "nowrap", background: tab === k ? "#4a7fd4" : "transparent", color: tab === k ? "#fff" : "var(--text-sub)", border: tab === k ? "none" : "1px solid var(--border-input)" }}>{l}</button>
         ))}
       </div>
-      {tab === "mano" && (inMano.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "#4a4858" }}>Nessun titolo in mano</div> : inMano.map(i => <IncassoCard key={i.id} inc={i} />))}
-      {tab === "agente" && (totalePerAgente.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "#4a4858" }}>Nessun titolo in mano</div> : totalePerAgente.map(ag => (
+      {tab === "mano" && (inMano.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Nessun titolo in mano</div> : inMano.map(i => <IncassoCard key={i.id} inc={i} />))}
+      {tab === "agente" && (totalePerAgente.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Nessun titolo in mano</div> : totalePerAgente.map(ag => (
         <div key={ag.agente} className="card" style={{ marginBottom: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ fontWeight: 600 }}>{ag.agente}</div>
             <div className="mono" style={{ fontWeight: 600, color: "#EF9F27" }}>{fmtEur(ag.totale)}</div>
           </div>
-          <div style={{ fontSize: 12, color: "#5a5868", marginBottom: 10 }}>{ag.count} titoli</div>
-          {ag.titoli.map(i => <div key={i.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid #1a1a25", fontSize: 13 }}><span>{i.ragione} · {i.tipo}</span><span className="mono">{fmtEur(i.incassoNetto || i.importo)}</span></div>)}
+          <div style={{ fontSize: 12, color: "var(--text-sub)", marginBottom: 10 }}>{ag.count} titoli</div>
+          {ag.titoli.map(i => <div key={i.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid var(--border)", fontSize: 13 }}><span>{i.ragione} · {i.tipo}</span><span className="mono">{fmtEur(i.incassoNetto || i.importo)}</span></div>)}
         </div>
       )))}
-      {tab === "spediti" && (spediti.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "#4a4858" }}>Nessun titolo spedito</div> : spediti.map(i => <IncassoCard key={i.id} inc={i} />))}
+      {tab === "spediti" && (spediti.length === 0 ? <div className="card" style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Nessun titolo spedito</div> : spediti.map(i => <IncassoCard key={i.id} inc={i} />))}
       {tab === "tutti" && incassi.map(i => <IncassoCard key={i.id} inc={i} />)}
     </div>
   );
@@ -1372,17 +1425,17 @@ function Dashboard({ kpi, clienti, praticheLl, incassi, agenti, insoluti, onSele
   return (
     <div>
       <div className="section-title">Dashboard</div>
-      <div style={{ color: "#5a5868", fontSize: 13, marginBottom: 20 }}>
+      <div style={{ color: "var(--text-sub)", fontSize: 13, marginBottom: 20 }}>
         {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
-        {kpi.dataUltimoImport && <span style={{ marginLeft: 12, fontSize: 11, color: "#4a4858" }}>· Ultimo import: {fmtData(kpi.dataUltimoImport)}</span>}
+        {kpi.dataUltimoImport && <span style={{ marginLeft: 12, fontSize: 11, color: "var(--text-muted)" }}>· Ultimo import: {fmtData(kpi.dataUltimoImport)}</span>}
       </div>
 
       {/* SCADUTO */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         <div className="card" style={{ gridColumn: "1 / -1" }}>
-          <div style={{ fontSize: 11, color: "#5a5868", marginBottom: 6 }}>SCADUTO TOTALE</div>
+          <div style={{ fontSize: 11, color: "var(--text-sub)", marginBottom: 6 }}>SCADUTO TOTALE</div>
           <div className="mono" style={{ fontSize: 26, fontWeight: 700, color: "#e24b4a" }}>{fmtEur(kpi.totScaduto)}</div>
-          {kpi.dataUltimoImport && <div style={{ fontSize: 12, color: "#5a5868", marginTop: 4 }}>Ultimo import: {fmtEur(kpi.scadutoMese)}</div>}
+          {kpi.dataUltimoImport && <div style={{ fontSize: 12, color: "var(--text-sub)", marginTop: 4 }}>Ultimo import: {fmtEur(kpi.scadutoMese)}</div>}
         </div>
         {[
           { label: "Pratiche L/L", val: kpi.llAperte, color: "#e24b4a" },
@@ -1391,7 +1444,7 @@ function Dashboard({ kpi, clienti, praticheLl, incassi, agenti, insoluti, onSele
           { label: "Richiami oggi", val: kpi.daRichiamare, color: "#378ADD" },
         ].map(k => (
           <div key={k.label} className="card">
-            <div style={{ fontSize: 11, color: "#5a5868", marginBottom: 6 }}>{k.label.toUpperCase()}</div>
+            <div style={{ fontSize: 11, color: "var(--text-sub)", marginBottom: 6 }}>{k.label.toUpperCase()}</div>
             <div className="mono" style={{ fontSize: 22, fontWeight: 700, color: k.color }}>{k.val}</div>
           </div>
         ))}
@@ -1399,36 +1452,36 @@ function Dashboard({ kpi, clienti, praticheLl, incassi, agenti, insoluti, onSele
 
       {/* INCASSATO */}
       <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 14, color: "#9a98a0" }}>Incassato</div>
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 14, color: "var(--text-sub)" }}>Incassato</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-          <div style={{ background: "#0f2a1a", border: "1px solid #1a4a2a", borderRadius: 12, padding: "12px" }}>
+          <div style={{ background: "var(--success-bg,#0f2a1a)", border: "1px solid var(--success-border,#1a4a2a)", borderRadius: 12, padding: "12px" }}>
             <div style={{ fontSize: 10, color: "#4ecb8d", marginBottom: 4 }}>CONFERMATO TOTALE</div>
             <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: "#4ecb8d" }}>{fmtEur(kpi.incassatoConfermatoTot)}</div>
             <div style={{ fontSize: 11, color: "#4ecb8d88", marginTop: 2 }}>{kpi.pctConfermatoTot.toFixed(1)}% scaduto</div>
           </div>
-          <div style={{ background: "#0a1f2a", border: "1px solid #1a3a4a", borderRadius: 12, padding: "12px" }}>
+          <div style={{ background: "var(--info-bg,#0a1f2a)", border: "1px solid var(--info-border,#1a3a4a)", borderRadius: 12, padding: "12px" }}>
             <div style={{ fontSize: 10, color: "#378ADD", marginBottom: 4 }}>IN CORSO TOTALE</div>
             <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: "#378ADD" }}>{fmtEur(kpi.incassatoAtteso)}</div>
             <div style={{ fontSize: 11, color: "#378ADD88", marginTop: 2 }}>in mano/spedito</div>
           </div>
-          <div style={{ background: "#1a1a25", border: "1px solid #2a2a38", borderRadius: 12, padding: "12px" }}>
-            <div style={{ fontSize: 10, color: "#9a98a0", marginBottom: 4 }}>TOTALE</div>
-            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: "#e8e6df" }}>{fmtEur(kpi.incassatoTotale)}</div>
+          <div style={{ background: "#1a1a25", border: "1px solid var(--border-input)", borderRadius: 12, padding: "12px" }}>
+            <div style={{ fontSize: 10, color: "var(--text-sub)", marginBottom: 4 }}>TOTALE</div>
+            <div className="mono" style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>{fmtEur(kpi.incassatoTotale)}</div>
           </div>
         </div>
-        <div style={{ borderTop: "1px solid #1e1e2a", paddingTop: 12 }}>
-          <div style={{ fontSize: 11, color: "#5a5868", marginBottom: 10 }}>QUESTO MESE</div>
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+          <div style={{ fontSize: 11, color: "var(--text-sub)", marginBottom: 10 }}>QUESTO MESE</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
             <div>
-              <div style={{ fontSize: 10, color: "#5a5868", marginBottom: 4 }}>Confermato</div>
+              <div style={{ fontSize: 10, color: "var(--text-sub)", marginBottom: 4 }}>Confermato</div>
               <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: "#4ecb8d" }}>{fmtEur(kpi.incassatoConfermatoMese)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 10, color: "#5a5868", marginBottom: 4 }}>In corso</div>
+              <div style={{ fontSize: 10, color: "var(--text-sub)", marginBottom: 4 }}>In corso</div>
               <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: "#378ADD" }}>{fmtEur(kpi.incassatoAttesoMese)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 10, color: "#5a5868", marginBottom: 4 }}>% su scaduto</div>
+              <div style={{ fontSize: 10, color: "var(--text-sub)", marginBottom: 4 }}>% su scaduto</div>
               <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: "#EF9F27" }}>{kpi.pctTotaleMese.toFixed(1)}%</div>
             </div>
           </div>
@@ -1436,7 +1489,7 @@ function Dashboard({ kpi, clienti, praticheLl, incassi, agenti, insoluti, onSele
       </div>
 
       {insolutiAperti.length > 0 && (
-        <div style={{ background: "#2a0a0a", border: "1px solid #4a1a1a", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
+        <div style={{ background: "var(--danger-bg,#2a0a0a)", border: "1px solid var(--danger-border,#4a1a1a)", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 500, color: "#e24b4a", marginBottom: 8 }}>⚠ Insoluti con scadenza 60gg</div>
           {insolutiAperti.map(i => {
             const gg = giorniDa(i.data);
@@ -1447,12 +1500,12 @@ function Dashboard({ kpi, clienti, praticheLl, incassi, agenti, insoluti, onSele
       )}
 
       <div className="card" style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 14, color: "#9a98a0" }}>Distribuzione stati</div>
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 14, color: "var(--text-sub)" }}>Distribuzione stati</div>
         {STATI_OP.filter(s => byStato[s] > 0).map(s => (
           <div key={s} style={{ marginBottom: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 5 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ width: 8, height: 8, borderRadius: "50%", background: STATO_COLORS[s], display: "inline-block" }} />{s}</span>
-              <span className="mono" style={{ color: "#9a98a0" }}>{byStato[s]}</span>
+              <span className="mono" style={{ color: "var(--text-sub)" }}>{byStato[s]}</span>
             </div>
             <div style={{ background: "#1a1a25", borderRadius: 4, height: 4, overflow: "hidden" }}>
               <div style={{ width: `${(byStato[s] / clienti.length) * 100}%`, height: "100%", background: STATO_COLORS[s], borderRadius: 4 }} />
@@ -1462,12 +1515,12 @@ function Dashboard({ kpi, clienti, praticheLl, incassi, agenti, insoluti, onSele
       </div>
 
       <div className="card">
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 14, color: "#9a98a0" }}>Scaduto per agente</div>
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 14, color: "var(--text-sub)" }}>Scaduto per agente</div>
         {agentiKpi.map((ag, i) => (
-          <div key={ag.nome} onClick={() => ag.id && onSelectAgente(ag.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < agentiKpi.length - 1 ? "1px solid #1a1a25" : "none", cursor: ag.id ? "pointer" : "default" }}>
+          <div key={ag.nome} onClick={() => ag.id && onSelectAgente(ag.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < agentiKpi.length - 1 ? "1px solid var(--border)" : "none", cursor: ag.id ? "pointer" : "default" }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 500 }}>{ag.nome}</div>
-              <div style={{ fontSize: 11, color: "#5a5868" }}>{ag.nClienti} clienti{ag.totMano > 0 ? ` · 💼 ${fmtEur(ag.totMano)} in mano` : ""}{ag.hasAlert ? " ⚠" : ""}</div>
+              <div style={{ fontSize: 11, color: "var(--text-sub)" }}>{ag.nClienti} clienti{ag.totMano > 0 ? ` · 💼 ${fmtEur(ag.totMano)} in mano` : ""}{ag.hasAlert ? " ⚠" : ""}</div>
             </div>
             <div className="mono" style={{ fontWeight: 600, color: "#e24b4a" }}>{fmtEur(ag.totScaduto)}</div>
           </div>
