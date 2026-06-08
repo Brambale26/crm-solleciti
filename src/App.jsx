@@ -84,8 +84,25 @@ function loadLocal() {
   } catch { return { clienti: [], praticheLl: [], incassi: [], agenti: [], insoluti: [] }; }
 }
 function saveLocal(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
-async function loadFromSheets() { const r = await fetch(SCRIPT_URL + "?action=load"); return r.json(); }
-async function saveToSheets(d) { await fetch(SCRIPT_URL + "?action=save&data=" + encodeURIComponent(JSON.stringify(d))); }
+async function loadFromSheets() {
+  try {
+    const r = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "load" }),
+    });
+    return r.json();
+  } catch(e) { return {}; }
+}
+async function saveToSheets(d) {
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", data: d }),
+    });
+  } catch(e) { console.error("Sync error", e); }
+}
 
 function oggi() { return new Date().toISOString().slice(0, 10); }
 function oraOra() { return new Date().toTimeString().slice(0, 5); }
