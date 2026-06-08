@@ -86,21 +86,16 @@ function loadLocal() {
 function saveLocal(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
 async function loadFromSheets() {
   try {
-    const r = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "load" }),
-    });
-    return r.json();
+    const url = SCRIPT_URL + "?action=load";
+    const r = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(url));
+    const json = await r.json();
+    return JSON.parse(json.contents);
   } catch(e) { return {}; }
 }
 async function saveToSheets(d) {
   try {
-    await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "save", data: d }),
-    });
+    const url = SCRIPT_URL + "?action=save&data=" + encodeURIComponent(JSON.stringify(d));
+    await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(url));
   } catch(e) { console.error("Sync error", e); }
 }
 
